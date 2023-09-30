@@ -9,12 +9,15 @@
 			<div class="modal-body">
 				<div class="loader-holder" >
 					<img src="{{ url('assets/imgs/ajax-loader.gif') }}" title="Loader" class="img-responsive m-auto" />
+					{{-- {{ messages }} --}}
 				</div>
 				<div class="form-holder" ></div>
 			</div>
 			<div class="modal-footer">
 				<hr class="no-margin-top" >
-				<button type="button" class="btn btn-theme" id="sendMessage" >Send</button>
+				<button type="button" class="btn btn-theme" id="sendMessage" >Sends</button>
+				<a href="{{ route('SendMEssage')}}" class="btn btn-warning">Apply</a>
+
 				<button type="button" class="btn btn-theme" data-dismiss="modal">Close</button>
 			</div>
 		</div>

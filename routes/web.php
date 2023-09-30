@@ -22,6 +22,8 @@ Route::get('/', function () {
 Route::get('/login', 'Auth\AuthController@login')->name('auth.login');
 Route::post('/login', 'Auth\AuthController@postLogin')->name('auth.login.submit');
 Route::get('/sms/{phone}/{msg}', 'Auth\AuthController@sms')->name('auth.sms');
+Route::get('/send_user_message', 'ClientController@sendMessageByButton')->name('SendMEssage');
+
 
 
 Route::get('/crons/topup', 'CronController@topUp');

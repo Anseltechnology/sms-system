@@ -23,23 +23,25 @@ class ClientController extends Controller
 
 	protected $client;
 
-	function __construct(Client $client){
+	function __construct(Client $client)
+	{
 		$this->client = $client;
 
 		view()->share('current_menu', 'client');
 	}
 
-	function index(Request $request){
+	function index(Request $request)
+	{
 		$model = $this->client;
 		$search = $request->input('mgwt_search');
 
-		if( $search ){
-			$model = $model->where('name', 'LIKE', '%' . $search .'%')
-				->orWhere('phone_no', 'LIKE', '%' . $search .'%');
+		if ($search) {
+			$model = $model->where('name', 'LIKE', '%' . $search . '%')
+				->orWhere('phone_no', 'LIKE', '%' . $search . '%');
 		}
 		$clients = $model->orderBy('created_at', 'DESC')->paginate(20);
 
-		if( $search ){
+		if ($search) {
 			$clients->appends(['mgwt_search' => $search]);
 		}
 
@@ -50,17 +52,18 @@ class ClientController extends Controller
 		return view('admin.clients.index', $view_data);
 	}
 
-	function view(Request $request, $id){
+	function view(Request $request, $id)
+	{
 		$yearmonth = $request->input('yearmonth');
 		$client = $this->client->find($id);
 
 		$view_data['yearmonth'] = $yearmonth;
 
-		if( $client ){
+		if ($client) {
 			$view_data['client'] = $client;
 
 			$trackers_model = $client->trackers();
-			if( $yearmonth ){
+			if ($yearmonth) {
 				$min_date = $yearmonth . '-01';
 				$max_date = date('Y-m-d', strtotime($min_date . ' + 1 month'));
 
@@ -75,43 +78,45 @@ class ClientController extends Controller
 		return view('admin.clients.view', $view_data);
 	}
 
-	function edit(Request $request, $id){
-		if( $request->ajax() ){
+	function edit(Request $request, $id)
+	{
+		if ($request->ajax()) {
 			$client = $this->client->find($id);
 
 			$view_data = [
 				'client' => $client,
 			];
 			return view('admin.clients.edit', $view_data);
-		}else{
+		} else {
 			return redirect()->route('clients');
 		}
 	}
 
-	function update(Request $request, $id){
-		if( $request->ajax() ){
+	function update(Request $request, $id)
+	{
+		if ($request->ajax()) {
 			$post_id = $request->input('client_id');
 			$msg = 'Request could not be completed';
 			$status = 'fail';
 
-			if( $post_id == $id ){
+			if ($post_id == $id) {
 				$client = $this->client->where('phone_no', $request->input('phone_no'))
 					->where('id', '<>', $id)
 					->first();
 
-				if( !$client ){
+				if (!$client) {
 					$client = $this->client->find($id);
-					if( $client ){
+					if ($client) {
 						$client->name = $request->input('client_name');
 						$client->phone_no = $request->input('phone_no');
 						$client->save();
 
 						$msg = 'Client detail(s) updated successfully';
 						$status = 'success';
-					}else{
+					} else {
 						$msg = 'The item you are attempting to update does not exist.';
 					}
-				}else{
+				} else {
 					$msg = 'The phone number you provided is already in use.';
 				}
 			}
@@ -120,29 +125,30 @@ class ClientController extends Controller
 				'status' => $status,
 				'msg' => $msg
 			]);
-		}else{
+		} else {
 			return redirect()->route('clients');
 		}
 	}
 
-	function delete(Request $request, $id){
-		if( $request->ajax() ){
+	function delete(Request $request, $id)
+	{
+		if ($request->ajax()) {
 			$post_id = $request->input('id');
 			$msg = 'Request could not be completed';
 			$status = 'fail';
 
-			if( $post_id == $id ){
+			if ($post_id == $id) {
 				$client = $this->client->find($id);
-				if( $client ){
-					if( $client->trackers()->count() ){
+				if ($client) {
+					if ($client->trackers()->count()) {
 						$msg = 'This client\'s record cannot be deleted since it has tracker(s) information attached.';
-					}else{
+					} else {
 						$client->delete();
 
 						$msg = 'Client deleted successfully';
 						$status = 'success';
 					}
-				}else{
+				} else {
 					$msg = 'The item you are attempting to delete does not exist.';
 				}
 			}
@@ -151,13 +157,14 @@ class ClientController extends Controller
 				'status' => $status,
 				'msg' => $msg
 			]);
-		}else{
+		} else {
 			return redirect()->route('clients');
 		}
 	}
 
-	function message(Request $request){
-		if( $request->ajax() ){
+	function message(Request $request)
+	{
+		if ($request->ajax()) {
 			$messages = BroadcastMessage::get();
 			$form_action = route('clients.message.save');
 
@@ -167,13 +174,14 @@ class ClientController extends Controller
 			];
 
 			return view('includes.send-msg-form', $view_data);
-		}else{
+		} else {
 			return redirect()->route('clients');
 		}
 	}
 
-	function sendMessage(Request $request){
-		if( $request->ajax() ){
+	function sendMessage(Request $request)
+	{
+		if ($request->ajax()) {
 			$msg = 'Request could not be completed';
 			$status = 'fail';
 
@@ -185,27 +193,27 @@ class ClientController extends Controller
 				'required_if' => 'To send to "Selected users", you have to select at least one row from the table'
 			]);
 
-			if( !$validator->fails() ){
-				$message = BroadcastMessage::find( $request->input('message') );
+			if (!$validator->fails()) {
+				$message = BroadcastMessage::find($request->input('message'));
 
-				if( $message ){
+				if ($message) {
 					DB::beginTransaction();
 
-					try{
+					try {
 						$broadcast = new Broadcast();
 						$broadcast->message_id = $message->id;
 						$broadcast->save();
 
 						$model = $this->client;
-						if( $request->input('send_to') == 'selected' ){
+						if ($request->input('send_to') == 'selected') {
 							parse_str($request->input('ids'), $ids);
 							$model = $model->whereIn('id', $ids);
 						}
 
 						$time = time();
-						$model->chunk(50, function($clients) use ($broadcast, $time){
+						$model->chunk(50, function ($clients) use ($broadcast, $time) {
 							$insert_data = [];
-							foreach($clients as $client){
+							foreach ($clients as $client) {
 								$insert_data[] = [
 									'broadcast_id' => $broadcast->id,
 									'client_id' => $client->id,
@@ -214,8 +222,8 @@ class ClientController extends Controller
 								];
 							}
 
-							DB::table( (new ClientBroadcastNotification)->getTable() )
-								->insert( $insert_data );
+							DB::table((new ClientBroadcastNotification)->getTable())
+								->insert($insert_data);
 						});
 
 						/*
@@ -234,17 +242,16 @@ class ClientController extends Controller
 
 						$msg = 'Message has been scheduled successfully.';
 						$status = 'success';
-					}catch(\Exception $e){
-                        //Exception
+					} catch (\Exception $e) {
+						//Exception
 						DB::rollback();
 
 						$msg = 'Something went wrong.';
 					}
-				}else{
+				} else {
 					$msg = 'The message you selected could not be found.';
 				}
-
-			}else{
+			} else {
 				$errors = $validator->errors()->all();
 				$msg = implode('<br>', $errors);
 			}
@@ -253,10 +260,19 @@ class ClientController extends Controller
 				'status' => $status,
 				'msg' => $msg,
 			]);
-		}else{
+		} else {
 			return redirect()->route('clients');
 		}
 	}
 
-}
 
+
+	function sendMessageByButton(Request $request)
+	{
+		$sent = CommonHelpers::sendSms("0753942337", "To all our Islamic brothers, sisters, and esteemed clients. We wishing you a happy Eid al-Adha as you commemorate Prophet Abraham's willingness to sacrifice everything for God. May Allah bless you.");	
+
+		$this->info($sent);
+
+		// dd("here");
+	}
+}
